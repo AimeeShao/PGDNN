@@ -1,4 +1,6 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+import tensorflow_probability as tfp
 
 FEATURE_SIZE = 64
 
@@ -58,7 +60,7 @@ class fSIM:
 	def conv3d_layer(self, inputs, out_dim, name, k_h=4, k_w=4, k_d=4, d_h=2, d_w=2, d_d=2):
 		with tf.name_scope('conv_layer'):
 			with tf.name_scope('weights'):
-				weights = tf.get_variable(name=name + '/weights', shape=[k_d, k_h, k_w, inputs.get_shape()[-1], out_dim], initializer=tf.contrib.layers.xavier_initializer())
+				weights = tf.get_variable(name=name + '/weights', shape=[k_d, k_h, k_w, inputs.get_shape()[-1], out_dim], initializer=tf.glorot_uniform_initializer())
 				tf.summary.histogram(name + '/weights', weights)
 			with tf.name_scope('biases'):
 				biases = tf.get_variable(name=name + '/biases', shape=[out_dim], dtype=tf.float32, initializer=tf.constant_initializer(0.0))
@@ -71,7 +73,7 @@ class fSIM:
 		assert len(inputs.get_shape()) == 2
 		with tf.name_scope('fc_layer'):
 			with tf.name_scope('weights'):
-				weights = tf.get_variable(name=name + '/weights', dtype=tf.float32, shape=[inputs.get_shape()[1], out_dim], initializer=tf.contrib.layers.xavier_initializer())
+				weights = tf.get_variable(name=name + '/weights', dtype=tf.float32, shape=[inputs.get_shape()[1], out_dim], initializer=tf.glorot_uniform_initializer())
 				tf.summary.histogram(name + '/weights', weights)
 			with tf.name_scope('biases'):
 				biases = tf.get_variable(name=name + '/biases', shape=[out_dim], dtype=tf.float32, initializer=tf.constant_initializer(0.0))
@@ -87,9 +89,9 @@ class fSIM:
 		self.weight3 = w3 / (w1 + w2 + w3)
 		self.mu1, self.mu2, self.mu3 = tf.split(self.out_x2, 3, 1)
 		self.stddev1, self.stddev2, self.stddev3 = tf.split(self.out_x3, 3, 1)
-		mvn1 = tf.contrib.distributions.MultivariateNormalDiag(self.mu1, self.stddev1, allow_nan_stats=False)
-		mvn2 = tf.contrib.distributions.MultivariateNormalDiag(self.mu2, self.stddev2, allow_nan_stats=False)
-		mvn3 = tf.contrib.distributions.MultivariateNormalDiag(self.mu3, self.stddev3, allow_nan_stats=False)
+		mvn1 = tfp.distributions.MultivariateNormalDiag(self.mu1, self.stddev1, allow_nan_stats=False)
+		mvn2 = tfp.distributions.MultivariateNormalDiag(self.mu2, self.stddev2, allow_nan_stats=False)
+		mvn3 = tfp.distributions.MultivariateNormalDiag(self.mu3, self.stddev3, allow_nan_stats=False)
 		e1 = - tf.log(mvn1.prob(self.out_y) * self.weight1 +
 						mvn2.prob(self.out_y) * self.weight2 +
 						mvn3.prob(self.out_y) * self.weight3 + 1.0e-10)

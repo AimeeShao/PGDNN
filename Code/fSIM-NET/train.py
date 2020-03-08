@@ -2,14 +2,15 @@ import os
 import random
 import numpy as np
 import scipy.io as scio
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import network
 
 EPOCHS = 15000
-BATCH_SIZE = 64
+BATCH_SIZE = 1
 LEARNING_RATE = 0.0001
-DATA_OBJ = '../../DATA/shape'
-DATA_SCE = '../../DATA/scene'		
+DATA_OBJ = '../../Data/shape'
+DATA_SCE = '../../Data/scene'		
 TRAIN_FILE = './datalist/train_9-1_25cate.txt'
 MODEL_PATH = '../../Model/fSIM/9-1'
 LOG_PATH = '../../Log/fSIM/9-1'
@@ -42,7 +43,7 @@ for model in os.listdir(DATA_SCE):
 	newData[:,:,:,2] = free
 	dataMap[model] = newData
 print("Dataset loaded:", len(dataMap), "models")
-
+	
 trainList = []
 f = open(TRAIN_FILE)
 lines = f.readlines()
@@ -83,11 +84,11 @@ if new:
 			batch_ys[i,:,:,:,:] = dataMap[model_y]
 			batch_zs[i,:,:,:,:] = dataMap[model_z]
 		_, loss = sess.run([optimizer, fSIM.loss], feed_dict={
-							fSIM.in_x: batch_xs, fSIM.in_y: batch_ys, fSIM.in_z: batch_zs})
+						fSIM.in_x: batch_xs, fSIM.in_y: batch_ys, fSIM.in_z: batch_zs})
 		if epoch % 10 == 0:
 			print("epoch: %d loss: %f" % (epoch, loss))
 			train_log = sess.run(merged, feed_dict={
-								 fSIM.in_x: batch_xs, fSIM.in_y: batch_ys, fSIM.in_z: batch_zs})
+							 fSIM.in_x: batch_xs, fSIM.in_y: batch_ys, fSIM.in_z: batch_zs})
 			writer.add_summary(train_log, epoch)	
 	saver.save(sess, MODEL_PATH+'/model.ckpt')
 	print("Model saved")
